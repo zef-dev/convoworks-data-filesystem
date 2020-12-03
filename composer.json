@@ -4,7 +4,6 @@
 	"description" : "Filesystem service data layer implementation for the Convoworks",
 	"homepage" : "https://github.com/zef-dev/convoworks-data-filesystem",
 	"keywords" : [
-		"mysql",
 		"convoworks"
 	],
 	"license" : "MIT",
