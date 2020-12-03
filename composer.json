@@ -1,0 +1,26 @@
+{
+	"name" : "zef-dev/convoworks-data-filesystem",
+	"type" : "library",
+	"description" : "Filesystem service data layer implementation for the Convoworks",
+	"homepage" : "https://github.com/zef-dev/convoworks-data-filesystem",
+	"keywords" : [
+		"mysql",
+		"convoworks"
+	],
+	"license" : "MIT",
+	"require" : {
+		"php" : "^7.2"
+	},
+	"autoload" : {
+		"psr-4" : {
+			"Convo\\Data\\Filesystem\\" : "src/Convo/Data/Filesystem"
+		}
+	},
+	"config" : {
+		"platform" : {
+			"php" : "7.2"
+		},
+		"sort-packages" : true
+	},
+	"minimum-stability" : "beta"
+}
