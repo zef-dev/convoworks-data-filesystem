@@ -1,6 +1,6 @@
 # Filesystem data layer for Convoworks
 
-This library contains filesystem implementations for `\Convo\Core\IServiceDataProvider`, `\Convo\Core\IServiceParamsFactory`, `\Convo\Core\IServiceParamsFactory` and `Convo\Core\Media\IServiceMediaManager` Convoworks interfaces which are serving for data storage.
+This library contains filesystem implementations for `\Convo\Core\IServiceDataProvider`, `\Convo\Core\IServiceParamsFactory`, `\Convo\Core\IServiceParamsFactory` and `Convo\Core\Media\IServiceMediaManager` [Convoworks](https://github.com/zef-dev/convoworks-core) interfaces which are serving for data storage.
 
 In addition there is a simple filesystem `Psr\SimpleCache\CacheInterface` implementation too.
 
@@ -14,3 +14,8 @@ In addition there is a simple filesystem `Psr\SimpleCache\CacheInterface` implem
 ### Cache
 
 * `Convo\Data\Filesystem\FilesystemCache` implements `CacheInterface` - cache is available to be used in Convoworks components
+
+
+---
+
+For more information, please check out [convoworks.com](https://convoworks.com)
