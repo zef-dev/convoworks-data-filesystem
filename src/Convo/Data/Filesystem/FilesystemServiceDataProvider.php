@@ -47,7 +47,12 @@ class FilesystemServiceDataProvider extends AbstractServiceDataProvider
 			try {
 			    $serviceMeta = $this->getServiceMeta( $user, $service_id);
 			    if ($this->_checkServiceOwner($user, $serviceMeta)) {
-                    $all[]		=	$serviceMeta;
+					$serviceMeta['owner'] = [
+						'name' => $user->getName(),
+						'username' => $user->getUsername(),
+						'email' => $user->getEmail()
+					];
+                    $all[] = $serviceMeta;
                 }
 			} catch ( \Convo\Core\DataItemNotFoundException $e) {
 				$this->_logger->warning( $e->getMessage());
