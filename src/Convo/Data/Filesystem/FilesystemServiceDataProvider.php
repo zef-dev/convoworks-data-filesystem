@@ -13,11 +13,18 @@ class FilesystemServiceDataProvider extends AbstractServiceDataProvider
 
 	private $_basePath;
 
+	/**
+	 * @var \Convo\Core\IAdminUserDataProvider
+	 */
+	private $_userDataProvider;
 
-	public function __construct( \Psr\Log\LoggerInterface $logger, $basePath)
+	public function __construct( \Psr\Log\LoggerInterface $logger, \Convo\Core\IAdminUserDataProvider $userProvider, $basePath)
 	{
 	    parent::__construct( $logger);
-		$this->_basePath	=	\Convo\Core\Util\StrUtil::removeTrailingSlashes( $basePath);
+
+		$this->_basePath = \Convo\Core\Util\StrUtil::removeTrailingSlashes( $basePath);
+
+		$this->_userDataProvider = $userProvider;
 	}
 
 	/**
@@ -47,7 +54,14 @@ class FilesystemServiceDataProvider extends AbstractServiceDataProvider
 			try {
 			    $serviceMeta = $this->getServiceMeta( $user, $service_id);
 			    if ($this->_checkServiceOwner($user, $serviceMeta)) {
-                    $all[]		=	$serviceMeta;
+					$owner = $this->_userDataProvider->findUser($serviceMeta['owner']);
+
+					$serviceMeta['owner'] = [
+						'name' => $owner->getName(),
+						'username' => $owner->getUsername(),
+						'email' => $owner->getEmail()
+					];
+                    $all[] = $serviceMeta;
                 }
 			} catch ( \Convo\Core\DataItemNotFoundException $e) {
 				$this->_logger->warning( $e->getMessage());
