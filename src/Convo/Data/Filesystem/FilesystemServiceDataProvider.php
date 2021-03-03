@@ -75,7 +75,7 @@ class FilesystemServiceDataProvider extends AbstractServiceDataProvider
 	 * {@inheritDoc}
 	 * @see \Convo\Core\IServiceDataProvider::createNewService()
 	 */
-	public function createNewService( \Convo\Core\IAdminUser $user, $serviceName, $defaultLanguage, $isPrivate, $serviceAdmins, $workflowData)
+	public function createNewService( \Convo\Core\IAdminUser $user, $serviceName, $defaultLanguage, $defaultLocale, $supportedLocales, $isPrivate, $serviceAdmins, $workflowData)
 	{
 	    $service_id                 =   $this->_generateIdFromName( $serviceName);
 
@@ -84,6 +84,8 @@ class FilesystemServiceDataProvider extends AbstractServiceDataProvider
 	    $meta_data['service_id']	=	$service_id;
 	    $meta_data['name']			=	$serviceName;
         $meta_data['default_language']	=	$defaultLanguage;
+        $meta_data['default_locale']	=	$defaultLocale;
+        $meta_data['supported_locales']	=	$supportedLocales;
 	    $meta_data['owner']			=	$user->getEmail();
 	    $meta_data['admins']        =   $serviceAdmins;
 	    $meta_data['is_private']    =   $isPrivate;
@@ -269,7 +271,7 @@ class FilesystemServiceDataProvider extends AbstractServiceDataProvider
 	 * {@inheritDoc}
 	 * @see \Convo\Core\IServiceDataProvider::createRelease()
 	 */
-	public function createRelease( IAdminUser $user, $serviceId, $platformId, $type, $stage, $alias, $versionId)
+	public function createRelease( IAdminUser $user, $serviceId, $platformId, $type, $stage, $alias, $versionId, $meta)
 	{
 	    $service_folder	=	$this->_basePath.'/services/'.$serviceId.'/releases';
 
@@ -294,6 +296,9 @@ class FilesystemServiceDataProvider extends AbstractServiceDataProvider
 	        'type' => $type,
 	        'stage' => $stage,
 	        'alias' => $alias,
+            'default_language' => $meta['default_language'] ?? 'en',
+            'default_locale' => $meta['default_locale'] ?? 'en-US',
+            'supported_locales' => $meta['supported_locales'] ?? ['en-US'],
 	        'time_created' => time(),
 	        'time_updated' => time()
 	    ]);
@@ -348,9 +353,9 @@ class FilesystemServiceDataProvider extends AbstractServiceDataProvider
 	 * {@inheritDoc}
 	 * @see \Convo\Core\IServiceDataProvider::setReleaseVersion()
 	 */
-	public function setReleaseVersion( \Convo\Core\IAdminUser $user, $serviceId, $releaseId, $versionId) {
+	public function setReleaseVersion( \Convo\Core\IAdminUser $user, $serviceId, $releaseId, $versionId, $meta) {
 	    $release        =   $this->getReleaseData( $user, $serviceId, $releaseId);
-	    $release        =   array_merge( $release, [ 'version_id' => $versionId, 'time_updated' => time() ]);
+	    $release        =   array_merge( $release, [ 'version_id' => $versionId, 'time_updated' => time(), 'default_language' => $meta['default_language'] ?? 'en', 'default_locale' => $meta['default_locale'] ?? 'en-US', 'supported_locales' => $meta['supported_locales'] ?? ['en-US'] ]);
 	    $service_folder	=	$this->_basePath.'/services/'.$serviceId.'/releases';
 	    $full_path	    =   $service_folder.'/'.$releaseId.'.json';
 	    $ret	=	file_put_contents( $full_path, json_encode( $release, JSON_PRETTY_PRINT));
