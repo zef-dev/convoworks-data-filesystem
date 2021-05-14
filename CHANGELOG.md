@@ -4,6 +4,10 @@
 
 ## [Releases]
 
+## 1.2.1 - 2021-05-14
+
+* use `convoworks-core` v0.22.0
+
 ## 1.2.0 - 2021-03-27
 
 * use `convoworks-core` v0.21.0
