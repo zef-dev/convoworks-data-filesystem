@@ -4,7 +4,6 @@ namespace Convo\Data\Filesystem;
 
 class FilesystemServiceParams extends \Convo\Core\Params\AbstractServiceParams
 {
-
 	/**
 	 * Path to storage folder
 	 *
@@ -14,32 +13,39 @@ class FilesystemServiceParams extends \Convo\Core\Params\AbstractServiceParams
 
     private $_storeAsGz = true;
 
+    private $_jsonFilename;
+    private $_gzFilename;
+
     public function __construct( \Psr\Log\LoggerInterface $logger, $basePath, \Convo\Core\Params\IServiceParamsScope $scope, $storeAsGz)
     {
         parent::__construct( $logger, $scope);
     	$this->_basePath 	=   \Convo\Core\Util\StrUtil::removeTrailingSlashes( $basePath);
         $this->_storeAsGz   =   $storeAsGz;
+
+        $this->_jsonFilename = $this->_getFilename('.json');
+        $this->_gzFilename = $this->_getFilename('.json.gz');
     }
 
     public function getData()
     {
-        $data = array();
-        $gzFileName	=	$this->_getFilename('.gz');
-    	$jsonFileName	=	$this->_getFilename('.json');
+        $data = [];
 
-    	if ( file_exists( $jsonFileName) || file_exists( $gzFileName)) {
-            if (file_exists($gzFileName)) {
-                $data = json_decode(gzinflate(file_get_contents( $gzFileName)), true);
-                if ( $data === false) {
-                    throw new \Exception( 'Invalid JSON in ['.$gzFileName.']');
-                }
-            } else if (file_exists($jsonFileName)){
-                $data = json_decode( file_get_contents( $jsonFileName), true);
-                if ( $data === false) {
-                    throw new \Exception( 'Invalid JSON in ['.$jsonFileName.']');
-                }
+        if (file_exists($this->_gzFilename))
+        {
+            $data = json_decode(gzdecode(file_get_contents($this->_gzFilename)), true);
+            
+            if (!$data || json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('Invalid JSON in ['.$this->_gzFilename.']['.json_last_error_msg().']');
             }
-    	}
+        }
+        else if (file_exists($this->_jsonFilename))
+        {
+            $data = json_decode(file_get_contents($this->_jsonFilename), true);
+
+            if (!$data || json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('Invalid JSON in ['.$this->_jsonFilename.']['.json_last_error_msg().']');
+            }
+        }
 
     	return $data;
     }
@@ -47,41 +53,42 @@ class FilesystemServiceParams extends \Convo\Core\Params\AbstractServiceParams
     protected function _storeData( $data)
     {
     	$this->_ensureFolder();
-    	$jsonFile = $this->_getFilename('.json');
-    	$gZipFile = $this->_getFilename('.gz');
 
-    	if ($this->_storeAsGz) {
-            if (file_exists($jsonFile)) {
-                $this->_logger->info("Going to migrate data form [". $jsonFile . "] into [" . $gZipFile . "]");
+    	if ($this->_storeAsGz)
+        {
+            if (file_exists($this->_jsonFilename)) {
+                $this->_logger->info("Going to migrate data from [". $this->_jsonFilename . "] into [" . $this->_gzFilename . "]");
 
-                $backupFileContents = json_decode(file_get_contents($jsonFile), true);
+                $backupFileContents = json_decode(file_get_contents($this->_jsonFilename), true);
                 $newData = array_merge($backupFileContents, $data);
 
-                $newDataStringContent = json_encode($newData, JSON_PRETTY_PRINT);
-                $gzData = gzdeflate($newDataStringContent, 9);
-                file_put_contents($gZipFile, $gzData);
+                $newDataStringContent = json_encode($newData);
+                $gzData = gzencode($newDataStringContent);
+                file_put_contents($this->_gzFilename, $gzData);
 
-                unlink($jsonFile);
+                unlink($this->_jsonFilename);
             } else {
-                $this->_logger->info("Creating new file [" . $gZipFile . "]");
-                $gzData = gzdeflate(json_encode($data, JSON_PRETTY_PRINT), 9);
-                file_put_contents($gZipFile, $gzData);
+                $this->_logger->info("Creating new file [" . $this->_gzFilename . "]");
+                $gzData = gzencode(json_encode($data));
+                file_put_contents($this->_gzFilename, $gzData);
             }
-        } else if (!$this->_storeAsGz) {
-    	    if (file_exists($gZipFile)) {
-                $this->_logger->info("Going to migrate data form [". $gZipFile . "] into [" . $jsonFile . "]");
+        }
+        else
+        {
+    	    if (file_exists($this->_gzFilename)) {
+                $this->_logger->info("Going to migrate data form [". $this->_gzFilename . "] into [" . $this->_jsonFilename . "]");
 
-                $backupFileContents = json_decode(gzinflate(file_get_contents( $gZipFile)), true);
+                $backupFileContents = json_decode(gzdecode(file_get_contents( $this->_gzFilename)), true);
                 $newData = array_merge($backupFileContents, $data);
 
-                $newDataStringContent = json_encode($newData, JSON_PRETTY_PRINT);
-                file_put_contents($jsonFile, $newDataStringContent);
+                $newDataStringContent = json_encode($newData);
+                file_put_contents($this->_jsonFilename, $newDataStringContent);
 
-                unlink($gZipFile);
+                unlink($this->_gzFilename);
             } else {
-    	        $this->_logger->info("Creating new file " . $jsonFile);
-                $newDataStringContent = json_encode($data, JSON_PRETTY_PRINT);
-                file_put_contents($jsonFile, $newDataStringContent);
+    	        $this->_logger->info("Creating new file " . $this->_jsonFilename);
+                $newDataStringContent = json_encode($data);
+                file_put_contents($this->_jsonFilename, $newDataStringContent);
             }
         }
     }
