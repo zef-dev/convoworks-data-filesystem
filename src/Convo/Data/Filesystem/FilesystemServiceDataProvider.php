@@ -246,7 +246,7 @@ class FilesystemServiceDataProvider extends AbstractServiceDataProvider
 	 * {@inheritDoc}
 	 * @see \Convo\Core\IServiceDataProvider::createServiceVersion()
 	 */
-	public function createServiceVersion(\Convo\Core\IAdminUser $user, $serviceId, $workflow, $config, $versionTag=null)
+	public function createServiceVersion(\Convo\Core\IAdminUser $user, $serviceId, $workflow, $config, $platformId=null, $versionTag=null)
 	{
 	    $version_id	=	$this->_getNextServiceVersion( $serviceId);
 	    $this->_logger->debug( 'Got new version ['.$version_id.'] for service ['.$serviceId.']');
@@ -256,6 +256,7 @@ class FilesystemServiceDataProvider extends AbstractServiceDataProvider
 	        'version_id' => $version_id,
 	        'version_tag' => $versionTag,
 	        'release_id' => null,
+            'platform_id' => $platformId,
 	        'time_updated' => time(),
 	        'time_created' => time(),
 	    ];
@@ -266,6 +267,19 @@ class FilesystemServiceDataProvider extends AbstractServiceDataProvider
 
 	    return $version_id;
 	}
+
+    public function addPlatformVersionData(IAdminUser $user, $serviceId, $versionId, $data)
+    {
+        $this->_logger->info('Going to add version data ['.json_encode($data).'] to version ['.$versionId.']');
+        $meta = $this->getServiceMeta($user, $serviceId, $versionId);
+        $meta['platform_version_data'] = $data;
+        $meta['time_updated'] = time();
+        $this->_saveServiceFile( $serviceId, 'meta.json', $meta, $versionId);
+
+        $this->_logger->debug('Got updated version ['.$versionId.'] meta ['.json_encode($meta).']');
+
+        return $meta['version_id'];
+    }
 
 	/**
 	 * {@inheritDoc}
@@ -311,7 +325,26 @@ class FilesystemServiceDataProvider extends AbstractServiceDataProvider
 	    return $release_id;
 	}
 
-	/**
+    public function addPlatformReleaseData(IAdminUser $user, $serviceId, $releaseId, $versionId, $data)
+    {
+        $service_folder	=	$this->_basePath.'/services/'.$serviceId.'/releases';
+
+        $release = $this->getReleaseData($user, $serviceId, $releaseId);
+        $full_path	   =   $service_folder.'/'.$releaseId.'.json';
+
+        $this->_logger->debug( 'Saving service ['.$serviceId.'] release ['.$releaseId.'] to ['.$full_path.']');
+
+        $release['platform_release_data'] = $data;
+        $release['time_updated'] = time();
+        $ret	=	file_put_contents( $full_path, json_encode( $release, JSON_PRETTY_PRINT));
+        if ( $ret === false) {
+            throw new \Exception( 'Could not attach platform release data to service ['.$serviceId.'] and release ['.$releaseId.'] at ['.$full_path.']');
+        }
+
+        return $releaseId;
+    }
+
+    /**
 	 * {@inheritDoc}
 	 * @see \Convo\Core\IServiceDataProvider::getReleaseData()
 	 */
