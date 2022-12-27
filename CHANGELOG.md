@@ -4,6 +4,10 @@
 
 ## [Releases]
 
+## 1.3.0 - 2022-12-27
+
+* Implement platform version data
+
 ## 1.2.1 - 2021-05-14
 
 * use `convoworks-core` v0.22.0
